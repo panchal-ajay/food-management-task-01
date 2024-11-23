@@ -1,27 +1,32 @@
 const jwt = require("jsonwebtoken");
+const { IVD_OR_EXPIRE, INVD_TOKEN_FORMAT, TOKEN_MISSING } = require("../constants/messages");
+const { TypeExceptions } = require("../types/exceptions");
+const { errorResponse } = require("../utils/responseHelper");
 
-// middleware function for handling authentication
 const authMiddleware = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization) {
-    return res.status(401).json({ error: "Unauthorized - Invalid token" });
+    return next(errorResponse(res, TypeExceptions.Unauthorized(TOKEN_MISSING)));
   }
 
   const token = authorization.split(" ")[1];
 
-  try {
-    const decodedToken = jwt.verify(token, "your-secret-key");
+  // If no token is provided
+  if (!token) {
+    return next(errorResponse(res, TypeExceptions.Unauthorized(INVD_TOKEN_FORMAT)));
+  }
 
-    if (decodedToken.role == "admin") {
-      req.adminId = { adminId: decodedToken.adminId, role: "admin" };
-      next();
-    } else {
-      return res.status(401).json({ error: "Unauthorized - Invalid token" });
-    }
+  try {
+    // Verify the token using the secret key
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+
+    req.userId = decodedToken.userId;
+
+    // Continue with the request
+    next();
   } catch (error) {
-    console.log("error: ", error);
-    res.status(400).json({ error: "some thing went wrong" });
+    return next(errorResponse(res, TypeExceptions.Unauthorized(IVD_OR_EXPIRE)));
   }
 };
 

@@ -1,18 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const userController = require("../controller/admin/user/userManagement");
-const adminController = require("../controller/admin/adminManagement");
+const userController = require("../controller/user/userManagement");
 
-//Application update router
-router.put("/update", userController.update);
-
-//User update router
-router.get("/list", userController.list);
-
-//User list router
-router.delete("/delete", userController.delete);
-
-//Admin logout router
-router.post("/logout", adminController.adminLogout);
+router.post("/register", userController.create);
 
 module.exports = router;
